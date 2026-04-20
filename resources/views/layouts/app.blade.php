@@ -8,53 +8,111 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-50 flex h-screen overflow-hidden">
-    <!-- Sidebar -->
-    <aside class="w-60 bg-blue-900 text-white flex flex-col h-full shrink-0 relative">
-        <div class="px-6 py-6 border-b border-blue-800 flex items-center gap-3">
+<body class="bg-slate-50 flex flex-col h-screen overflow-hidden font-sans text-slate-800"
+    x-data="{ showImportModal: false }">
+    <!-- Top Navigation Header -->
+    <header
+        class="bg-white/90 backdrop-blur-md border-b border-gray-200 px-6 py-4 flex justify-between items-center z-30 shrink-0 shadow-sm relative">
+        <div class="flex items-center gap-3">
             <img src="{{ asset('logo/logo-bps.svg') }}" alt="Logo BPS" class="h-8 w-auto filter drop-shadow-sm">
-            <h1 class="text-2xl font-bold tracking-wider">GC PBI</h1>
+            <h1 class="text-xl font-bold tracking-wider text-blue-900 border-l-2 border-gray-300 pl-3">GC PBI</h1>
         </div>
 
-        <nav class="flex-1 px-4 py-6 space-y-2">
-            <a href="{{ route('dashboard') }}"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('dashboard') ? 'bg-blue-800 text-white font-medium' : 'text-blue-100 hover:bg-blue-800/50' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                    </path>
-                </svg>
-                Dashboard
-            </a>
-            <a href="{{ route('import.index') }}"
-                class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors {{ request()->routeIs('import.*') ? 'bg-blue-800 text-white font-medium' : 'text-blue-100 hover:bg-blue-800/50' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                </svg>
-                Import Data
-            </a>
-        </nav>
+        <div class="flex items-center gap-4">
+            @if(isset($latestImport) && $latestImport)
+                <div
+                    class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-full text-sm shadow-inner truncate max-w-sm">
+                    <div
+                        class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)] shrink-0">
+                    </div>
+                    <span class="text-slate-500 font-medium shrink-0">Dataset Aktif:</span>
+                    <span class="font-bold text-slate-800 truncate"
+                        title="{{ $latestImport->original_name }}">{{ $latestImport->original_name }}</span>
+                </div>
+            @endif
 
-        @if(isset($latestImport) && $latestImport)
-            <div class="p-4 mx-4 mb-6 relative bottom-0 bg-blue-800/50 rounded-lg text-sm border border-blue-700">
-                <p class="text-blue-200 text-xs uppercase font-semibold mb-1">Dataset Aktif</p>
-                <p class="truncate font-medium" title="{{ $latestImport->original_name }}">
-                    {{ $latestImport->original_name }}
-                </p>
-                <p class="text-blue-300 text-xs mt-1">{{ number_format($latestImport->total_rows) }} baris data</p>
-                <p class="text-blue-300 text-xs">{{ $latestImport->imported_at->format('d M Y H:i') }}</p>
-            </div>
-        @endif
-    </aside>
+            @unless(request()->routeIs('dashboard'))
+                <a href="{{ route('dashboard') }}"
+                    class="px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium rounded-full shadow-sm transition-all flex items-center gap-2 text-sm shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Kembali ke Dashboard
+                </a>
+            @endunless
+        </div>
+    </header>
 
     <!-- Main Content -->
-    <main class="flex-1 h-full overflow-y-auto p-6 relative">
-        @yield('content')
+    <main class="flex-1 overflow-y-auto relative bg-slate-50 flex flex-col">
+        <div class="flex-1 py-2 px-6 md:px-8 lg:px-10">
+            <!-- Render Session Alerts (Global) -->
+            <div class="max-w-7xl mx-auto my-4">
+                @if (session('success'))
+                    <div x-data="{ show: true }" x-show="show"
+                        class="p-4 border-l-4 border-green-400 bg-green-50 rounded-r-xl flex items-start shadow-sm justify-between">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-green-400 mt-0.5 mr-3 shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p class="text-sm text-green-800 font-medium">{{ session('success') }}</p>
+                        </div>
+                        <button @click="show = false" class="text-green-600 hover:text-green-800"><svg class="w-4 h-4"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg></button>
+                    </div>
+                @endif
+
+                @if (session('error') || $errors->any())
+                    <div x-data="{ show: true }" x-show="show"
+                        class="p-4 border-l-4 border-red-400 bg-red-50 rounded-r-xl flex items-start shadow-sm justify-between">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-red-500 mt-0.5 mr-3 shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <div>
+                                @if(session('error'))
+                                    <p class="text-sm text-red-800 font-medium">{{ session('error') }}</p>
+                                @endif
+                                @if($errors->any())
+                                    <ul class="text-sm text-red-700 list-disc list-inside mt-1">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </div>
+                        </div>
+                        <button @click="show = false" class="text-red-600 hover:text-red-800 mt-0.5"><svg class="w-4 h-4"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg></button>
+                    </div>
+                @endif
+            </div>
+
+            @yield('content')
+        </div>
+
+        <!-- Footer -->
+        <footer class="py-6 border-t border-slate-200 text-center text-sm text-slate-500 bg-white/50 shrink-0">
+            <p>&copy; 2026 - BPS Kabupaten Ogan Ilir.</p>
+        </footer>
     </main>
 </body>
 

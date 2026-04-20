@@ -20,12 +20,6 @@ class ImportController extends Controller
         'email_pencacah', 'assignment_status_alias', 'jumlah_dokumen',
     ];
 
-    public function index()
-    {
-        $latestImport = Import::where('status', 'done')->latest('imported_at')->first();
-        return view('import.index', compact('latestImport'));
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -107,7 +101,7 @@ class ImportController extends Controller
                 'status'     => 'done',
             ]);
 
-            return redirect()->route('import.index')
+            return redirect()->route('dashboard')
                 ->with('success', "Import berhasil! {$importer->getSuccessCount()} baris data berhasil diimport dari file \"{$originalName}\".");
 
         } catch (\Exception $e) {
@@ -119,7 +113,7 @@ class ImportController extends Controller
                 'notes'  => $e->getMessage(),
             ]);
 
-            return redirect()->route('import.index')
+            return redirect()->route('dashboard')
                 ->with('error', 'Import gagal saat memproses data: ' . $e->getMessage());
         }
     }
